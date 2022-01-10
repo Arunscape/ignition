@@ -1,0 +1,50 @@
+variant: fcos
+version: 1.4.0
+passwd:
+  users:
+    - name: fcos
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHVMzs2dfpHbo76Yuu4tylF4CdRLmwDi1Ni1SwN2FB/8 arunscape@pop-os
+storage:
+  files:
+    # hostname
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: Arun-Server
+
+    # swap on zram
+    - path: /etc/systemd/zram-generator.conf
+      mode: 0644
+      contents:
+        inline: |
+          # This config file enables a /dev/zram0 device with the default settings
+          [zram0]
+
+    # automatic updates
+    # The rollout_wariness parameter can be set to a floating point value between 0.0 (most eager) and 1.0 (most conservative).
+    # In order to receive updates very early in the phased rollout cycle, a node can be configured with a low value (e.g. 0.001)      
+    - path: /etc/zincati/config.d/51-rollout-wariness.toml
+      contents:
+        inline: |
+          [identity]
+          rollout_wariness = 0.001
+
+systemd:
+  units:
+    # automatically update boot images
+    - name: custom-bootupd-auto.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Bootupd automatic update
+
+        [Service]
+        ExecStart=/usr/bin/bootupctl update
+        RemainAfterExit=yes
+
+        [Install]
+        WantedBy=multi-user.target
+
+
+# todo: add services from my docker-compose configuration
